@@ -13,15 +13,15 @@
 		},
 		{
 			"src": "^\\/_image$",
-			"dest": "render"
-		},
-		{
-			"src": "^\\/$",
-			"dest": "render"
+			"dest": "_render"
 		},
 		{
 			"src": "^\\/api\\/trigger\\/?$",
-			"dest": "render"
+			"dest": "_render"
+		},
+		{
+			"src": "^\\/$",
+			"dest": "_render"
 		}
 	]
 }
