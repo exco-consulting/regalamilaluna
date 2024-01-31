@@ -1,6 +1,7 @@
 import { bold } from 'kleur/colors';
 import { escape } from 'html-escaper';
 import { clsx } from 'clsx';
+import 'cssesc';
 
 const ClientAddressNotAvailable = {
   name: "ClientAddressNotAvailable",
@@ -189,7 +190,7 @@ const LocalImageUsedWrongly = {
   name: "LocalImageUsedWrongly",
   title: "Local images must be imported.",
   message: (imageFilePath) => `\`Image\`'s and \`getImage\`'s \`src\` parameter must be an imported image or an URL, it cannot be a string filepath. Received \`${imageFilePath}\`.`,
-  hint: "If you want to use an image from your `src` folder, you need to either import it or if the image is coming from a content collection, use the [image() schema helper](https://docs.astro.build/en/guides/images/#images-in-content-collections) See https://docs.astro.build/en/guides/images/#src-required for more information on the `src` property."
+  hint: "If you want to use an image from your `src` folder, you need to either import it or if the image is coming from a content collection, use the [image() schema helper](https://docs.astro.build/en/guides/images/#images-in-content-collections). See https://docs.astro.build/en/guides/images/#src-required for more information on the `src` property."
 };
 const AstroGlobUsedOutside = {
   name: "AstroGlobUsedOutside",
@@ -200,7 +201,8 @@ const AstroGlobUsedOutside = {
 const AstroGlobNoMatch = {
   name: "AstroGlobNoMatch",
   title: "Astro.glob() did not match any files.",
-  message: (globStr) => `\`Astro.glob(${globStr})\` did not return any matching files. Check the pattern for typos.`
+  message: (globStr) => `\`Astro.glob(${globStr})\` did not return any matching files.`,
+  hint: "Check the pattern for typos."
 };
 const MissingSharp = {
   name: "MissingSharp",
@@ -288,6 +290,11 @@ class AstroError extends Error {
   }
 }
 
+const ASTRO_VERSION = "4.2.7";
+const ROUTE_DATA_SYMBOL = "astro.routeData";
+
+const REROUTE_DIRECTIVE_HEADER = "X-Astro-Reroute";
+
 function validateArgs(args) {
   if (args.length !== 3)
     return false;
@@ -323,8 +330,6 @@ function createComponent(arg1, moduleId, propagation) {
     return createComponentWithOptions(arg1);
   }
 }
-
-const ASTRO_VERSION = "4.2.4";
 
 function createAstroGlobFn() {
   const globHandler = (importMetaGlobResult) => {
@@ -376,7 +381,7 @@ Found handlers: ${Object.keys(mod).map((exp) => JSON.stringify(exp)).join(", ")}
     return new Response(null, { status: 404 });
   }
   const response = await handler.call(mod, context);
-  response.headers.set("X-Astro-Reroute", "no");
+  response.headers.set(REROUTE_DIRECTIVE_HEADER, "no");
   return response;
 }
 
@@ -1970,4 +1975,4 @@ function spreadAttributes(values = {}, _name, { class: scopedClassName } = {}) {
   return markHTMLString(output);
 }
 
-export { AstroError as A, renderJSX as B, ClientAddressNotAvailable as C, chunkToString as D, ExpectedImage as E, CantRenderPage as F, GetStaticPathsRequired as G, renderPage as H, IncompatibleDescriptorOptions as I, LocalImageUsedWrongly as L, MissingImageDimension as M, NoMatchingStaticPathFound as N, PageNumberParamNotFound as P, ResponseSentError as R, StaticClientAddressNotAvailable as S, UnsupportedImageFormat as U, UnsupportedImageConversion as a, MissingSharp as b, InvalidImageService as c, ExpectedImageOptions as d, createAstro as e, createComponent as f, ImageMissingAlt as g, addAttribute as h, renderHead as i, renderSlot as j, renderComponent as k, MiddlewareNoDataOrNextCalled as l, maybeRenderHead as m, MiddlewareNotAResponse as n, InvalidGetStaticPathsReturn as o, InvalidGetStaticPathsEntry as p, GetStaticPathsExpectedParams as q, renderTemplate as r, spreadAttributes as s, GetStaticPathsInvalidRouteParam as t, PrerenderDynamicEndpointPathCollide as u, LocalsNotAnObject as v, ASTRO_VERSION as w, renderEndpoint as x, ReservedSlotName as y, renderSlotToString as z };
+export { AstroError as A, renderSlotToString as B, ClientAddressNotAvailable as C, renderJSX as D, ExpectedImage as E, chunkToString as F, GetStaticPathsRequired as G, CantRenderPage as H, IncompatibleDescriptorOptions as I, renderPage as J, REROUTE_DIRECTIVE_HEADER as K, LocalImageUsedWrongly as L, MissingImageDimension as M, NoMatchingStaticPathFound as N, PageNumberParamNotFound as P, ROUTE_DATA_SYMBOL as R, StaticClientAddressNotAvailable as S, UnsupportedImageFormat as U, UnsupportedImageConversion as a, MissingSharp as b, InvalidImageService as c, ExpectedImageOptions as d, createAstro as e, createComponent as f, ImageMissingAlt as g, addAttribute as h, renderHead as i, renderSlot as j, renderComponent as k, ResponseSentError as l, maybeRenderHead as m, MiddlewareNoDataOrNextCalled as n, MiddlewareNotAResponse as o, InvalidGetStaticPathsReturn as p, InvalidGetStaticPathsEntry as q, renderTemplate as r, spreadAttributes as s, GetStaticPathsExpectedParams as t, GetStaticPathsInvalidRouteParam as u, PrerenderDynamicEndpointPathCollide as v, LocalsNotAnObject as w, ASTRO_VERSION as x, renderEndpoint as y, ReservedSlotName as z };

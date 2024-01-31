@@ -1,11 +1,13 @@
+import { renderers } from './renderers.mjs';
+import { l as levels, g as getEventPrefix, L as Logger, A as AstroIntegrationLogger, manifest } from './manifest_8XWsxzk5.mjs';
 import 'node:fs';
-import { e as appendForwardSlash, j as joinPaths, t as trimSlashes, s as slash, p as prependForwardSlash, r as removeTrailingForwardSlash, f as collapseDuplicateSlashes } from './chunks/astro/assets-service_WLY9V9Y-.mjs';
+import { e as appendForwardSlash, j as joinPaths, t as trimSlashes, s as slash, p as prependForwardSlash, r as removeTrailingForwardSlash, f as collapseDuplicateSlashes } from './chunks/astro/assets-service_dufWeyEb.mjs';
+import { R as ROUTE_DATA_SYMBOL, A as AstroError, l as ResponseSentError, n as MiddlewareNoDataOrNextCalled, o as MiddlewareNotAResponse, G as GetStaticPathsRequired, p as InvalidGetStaticPathsReturn, q as InvalidGetStaticPathsEntry, t as GetStaticPathsExpectedParams, u as GetStaticPathsInvalidRouteParam, P as PageNumberParamNotFound, N as NoMatchingStaticPathFound, v as PrerenderDynamicEndpointPathCollide, w as LocalsNotAnObject, x as ASTRO_VERSION, C as ClientAddressNotAvailable, S as StaticClientAddressNotAvailable, y as renderEndpoint, z as ReservedSlotName, B as renderSlotToString, D as renderJSX, F as chunkToString, H as CantRenderPage, J as renderPage$1, K as REROUTE_DIRECTIVE_HEADER } from './chunks/astro_XaDa6-lX.mjs';
 import { serialize, parse } from 'cookie';
-import { A as AstroError, R as ResponseSentError, l as MiddlewareNoDataOrNextCalled, n as MiddlewareNotAResponse, G as GetStaticPathsRequired, o as InvalidGetStaticPathsReturn, p as InvalidGetStaticPathsEntry, q as GetStaticPathsExpectedParams, t as GetStaticPathsInvalidRouteParam, P as PageNumberParamNotFound, N as NoMatchingStaticPathFound, u as PrerenderDynamicEndpointPathCollide, v as LocalsNotAnObject, w as ASTRO_VERSION, C as ClientAddressNotAvailable, S as StaticClientAddressNotAvailable, x as renderEndpoint, y as ReservedSlotName, z as renderSlotToString, B as renderJSX, D as chunkToString, F as CantRenderPage, H as renderPage$1 } from './chunks/astro_bIMeGSqA.mjs';
-import { l as levels, g as getEventPrefix, L as Logger, A as AstroIntegrationLogger, manifest } from './manifest_ToBreLxi.mjs';
 import 'kleur/colors';
 import 'html-escaper';
 import 'clsx';
+import 'cssesc';
 import buffer from 'node:buffer';
 import crypto from 'node:crypto';
 import 'fast-glob';
@@ -13,7 +15,7 @@ import nodePath from 'node:path';
 import 'node:url';
 import 'node:fs/promises';
 import 'node:module';
-import { renderers } from './renderers.mjs';
+import { onRequest } from './_noop-middleware.mjs';
 
 function shouldAppendForwardSlash(trailingSlash, buildFormat) {
   switch (trailingSlash) {
@@ -46,6 +48,7 @@ function getPathByLocale(locale, locales) {
       }
     }
   }
+  throw new Unreachable();
 }
 function normalizeTheLocale(locale) {
   return locale.replaceAll("_", "-").toLowerCase();
@@ -63,8 +66,15 @@ function toCodes(locales) {
   }
   return codes;
 }
+class Unreachable extends Error {
+  constructor() {
+    super(
+      "Astro encountered an unexpected line of code.\nIn most cases, this is not your fault, but a bug in astro code.\nIf there isn't one already, please create an issue.\nhttps://astro.build/issues"
+    );
+  }
+}
 
-const routeDataSymbol = Symbol.for("astro.routeData");
+const routeDataSymbol$1 = Symbol.for(ROUTE_DATA_SYMBOL);
 function pathnameHasLocale(pathname, locales) {
   const segments = pathname.split("/");
   for (const segment of segments) {
@@ -81,18 +91,12 @@ function pathnameHasLocale(pathname, locales) {
   return false;
 }
 function createI18nMiddleware(i18n, base, trailingSlash, buildFormat) {
-  if (!i18n) {
-    return void 0;
-  }
+  if (!i18n)
+    return (_, next) => next();
   return async (context, next) => {
-    if (!i18n) {
+    const routeData = Reflect.get(context.request, routeDataSymbol$1);
+    if (routeData?.type !== "page" && routeData?.type !== "fallback") {
       return await next();
-    }
-    const routeData = Reflect.get(context.request, routeDataSymbol);
-    if (routeData) {
-      if (routeData.type !== "page" && routeData.type !== "fallback") {
-        return await next();
-      }
     }
     const url = context.url;
     const { locales, defaultLocale, fallback, routing } = i18n;
@@ -168,7 +172,7 @@ function createI18nMiddleware(i18n, base, trailingSlash, buildFormat) {
   };
 }
 const i18nPipelineHook = (ctx) => {
-  Reflect.set(ctx.request, routeDataSymbol, ctx.route);
+  Reflect.set(ctx.request, routeDataSymbol$1, ctx.route);
 };
 
 const DELETED_EXPIRATION = /* @__PURE__ */ new Date(0);
@@ -763,6 +767,7 @@ function validatePrerenderEndpointCollision(route, mod, params) {
 }
 
 const clientLocalsSymbol$1 = Symbol.for("astro.locals");
+const routeDataSymbol = Symbol.for(ROUTE_DATA_SYMBOL);
 async function createRenderContext(options) {
   const request = options.request;
   const pathname = options.pathname ?? new URL(request.url).pathname;
@@ -909,8 +914,11 @@ function computePreferredLocaleList(request, locales) {
   return result;
 }
 function computeCurrentLocale(request, locales, routingStrategy, defaultLocale) {
-  const requestUrl = new URL(request.url);
-  for (const segment of requestUrl.pathname.split("/")) {
+  const routeData = Reflect.get(request, routeDataSymbol);
+  if (!routeData) {
+    return defaultLocale;
+  }
+  for (const segment of routeData.route.split("/")) {
     for (const locale of locales) {
       if (typeof locale === "string") {
         if (normalizeTheLocale(locale) === normalizeTheLocale(segment)) {
@@ -1653,30 +1661,24 @@ class App {
         this.#manifest.buildFormat
       );
       if (i18nMiddleware) {
-        if (mod.onRequest) {
-          this.#pipeline.setMiddlewareFunction(sequence(i18nMiddleware, mod.onRequest));
-        } else {
-          this.#pipeline.setMiddlewareFunction(i18nMiddleware);
-        }
+        this.#pipeline.setMiddlewareFunction(sequence(i18nMiddleware, this.#manifest.middleware));
         this.#pipeline.onBeforeRenderRoute(i18nPipelineHook);
       } else {
-        if (mod.onRequest) {
-          this.#pipeline.setMiddlewareFunction(mod.onRequest);
-        }
+        this.#pipeline.setMiddlewareFunction(this.#manifest.middleware);
       }
       response = await this.#pipeline.renderRoute(renderContext, pageModule);
     } catch (err) {
       this.#logger.error(null, err.stack || err.message || String(err));
       return this.#renderError(request, { status: 500 });
     }
-    if (REROUTABLE_STATUS_CODES.has(response.status) && response.headers.get("X-Astro-Reroute") !== "no") {
+    if (REROUTABLE_STATUS_CODES.has(response.status) && response.headers.get(REROUTE_DIRECTIVE_HEADER) !== "no") {
       return this.#renderError(request, {
         response,
         status: response.status
       });
     }
-    if (response.headers.has("X-Astro-Reroute")) {
-      response.headers.delete("X-Astro-Reroute");
+    if (response.headers.has(REROUTE_DIRECTIVE_HEADER)) {
+      response.headers.delete(REROUTE_DIRECTIVE_HEADER);
     }
     if (addCookieHeader) {
       for (const setCookieHeaderValue of App.getSetCookieFromResponse(response)) {
@@ -1794,8 +1796,8 @@ class App {
           status
         );
         const page = await mod.page();
-        if (skipMiddleware === false && mod.onRequest) {
-          this.#pipeline.setMiddlewareFunction(mod.onRequest);
+        if (skipMiddleware === false) {
+          this.#pipeline.setMiddlewareFunction(this.#manifest.middleware);
         }
         if (skipMiddleware) {
           this.#pipeline.unsetMiddlewareFunction();
@@ -1803,7 +1805,7 @@ class App {
         const response2 = await this.#pipeline.renderRoute(newRenderContext, page);
         return this.#mergeResponses(response2, originalResponse);
       } catch {
-        if (skipMiddleware === false && mod.onRequest) {
+        if (skipMiddleware === false) {
           return this.#renderError(request, {
             status,
             response: originalResponse,
@@ -2063,32 +2065,27 @@ const createExports = (manifest) => {
       req.url = realPath;
     }
     const locals = typeof localsHeader === "string" ? JSON.parse(localsHeader) : Array.isArray(localsHeader) ? JSON.parse(localsHeader[0]) : {};
-    const webResponse = await app.render(req, { locals, clientAddress });
+    const webResponse = await app.render(req, { addCookieHeader: true, clientAddress, locals });
     await NodeApp.writeResponse(webResponse, res);
   };
   return { default: handler };
 };
 
-const adapter = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
-  __proto__: null,
-  createExports
-}, Symbol.toStringTag, { value: 'Module' }));
+const _page0 = () => import('./chunks/generic_Xr11OZvk.mjs');
+const _page1 = () => import('./chunks/trigger_v_cqoDOh.mjs');
+const _page2 = () => import('./chunks/index_R4jBkB7G.mjs');
+const pageMap = new Map([
+    ["node_modules/astro/dist/assets/endpoint/generic.js", _page0],
+    ["src/pages/api/trigger.ts", _page1],
+    ["src/pages/index.astro", _page2]
+]);
 
-const _page0  = () => import('./chunks/generic_CzgmCmoT.mjs');
-const _page1  = () => import('./chunks/trigger_aR8B8esj.mjs');
-const _page2  = () => import('./chunks/index_J-uEkZXm.mjs');const pageMap = new Map([["node_modules/astro/dist/assets/endpoint/generic.js", _page0],["src/pages/api/trigger.ts", _page1],["src/pages/index.astro", _page2]]);
 const _manifest = Object.assign(manifest, {
-	pageMap,
-	renderers,
+    pageMap,
+    renderers,
+    middleware: onRequest
 });
-const _args = undefined;
-
 const _exports = createExports(_manifest);
-const _default = _exports['default'];
+const __astrojsSsrVirtualEntry = _exports.default;
 
-const _start = 'start';
-if(_start in adapter) {
-	adapter[_start](_manifest, _args);
-}
-
-export { _default as default, pageMap };
+export { __astrojsSsrVirtualEntry as default, pageMap };
