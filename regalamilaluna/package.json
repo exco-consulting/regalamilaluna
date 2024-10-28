@@ -10,24 +10,14 @@
     "astro": "astro"
   },
   "dependencies": {
-<<<<<<< HEAD
     "@astrojs/db": "^0.14.3",
     "@astrojs/tailwind": "^5.1.2",
     "@astrojs/vercel": "^7.8.2",
-=======
-    "@astrojs/tailwind": "^5.1.0",
-    "@astrojs/vercel": "^7.7.0",
-    "@directus/sdk": "^15.1.0",
->>>>>>> main
     "@supabase/supabase-js": "^2.38.1",
     "@trigger.dev/astro": "^2.2.2",
     "@trigger.dev/react": "^2.2.2",
     "@trigger.dev/sdk": "^2.2.2",
-<<<<<<< HEAD
     "astro": "^4.16.7",
-=======
-    "astro": "^4.10.2",
->>>>>>> main
     "tailwindcss": "^3.3.3"
   },
   "trigger.dev": {
